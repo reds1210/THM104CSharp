@@ -61,13 +61,6 @@ SELECT "欄位名" FROM "資料表名稱";
 ```SQL
 --選擇Customers資料表。
 SELECT * FROM Customers;
-
---在您提供的 SQL 查詢中，目前使用的是老式的隱式聯接語法，其中 WHERE 用於指定聯接條件。為了使用現代的 SQL 語法，我們可以用 JOIN 關鍵字來明確地表達這個聯接。這不僅使查詢更易於理解，而且是當前推薦的做法。
-SELECT A1.Region_Name REGION, SUM(A2.Sales) SALES
-FROM Geography A1, Store_Information A2
-WHERE A1.Store_Name = A2.Store_Name
-GROUP BY A1.Region_Name;
-
 ```
 
 ------
