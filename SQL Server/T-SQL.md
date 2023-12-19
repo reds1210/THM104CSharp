@@ -500,17 +500,202 @@ ON Employees.DepartmentID = Departments.DepartmentID;
 
 * 在實際應用中，選擇的 `JOIN` 類型取決於您的數據結構和預期獲得的查詢結果。
 
-## 進階查詢
+## 進階
 
 ### 子查詢
+
+子查詢是指嵌套在另一個查詢（主查詢）內的查詢。  
+可以出現在 `SELECT` 、 `FROM` 或 `WHERE` 子句中，並且通常在方括號內執行。  
+
+* 格式
+
+```SQL
+--SELECT內
+SELECT column_name,
+  (SELECT column_name 
+   FROM table_name 
+   WHERE condition) AS alias_name 
+FROM table_name;
+
+--FROM內
+SELECT * 
+FROM (SELECT column_name FROM table_name) AS subquery_name;
+
+--WHERE內
+SELECT * 
+FROM table_name 
+WHERE column_name IN 
+(SELECT column_name 
+FROM table_name 
+WHERE condition);
+```
+
+* 範例  
+  
+在 `SELECT` 中的子查詢
+
+```SQL
+SELECT EmployeeID, (SELECT COUNT(*) FROM Orders WHERE Orders.EmployeeID = Employees.EmployeeID) AS NumberOfOrders
+FROM Employees;
+```
+
+>*查詢為每個員工計算他們處理的訂單數量*
+
+在 `FROM` 中的子查詢：
+
+```SQL
+SELECT AVG(subquery.Price) FROM (SELECT Price FROM Products WHERE CategoryID = 1) AS subquery;
+```
+
+>*這個查詢計算類別 1 中所有產品的平均價格*
+
+在 `WHERE` 中的子查詢：
+
+```SQL
+SELECT * FROM Customers WHERE CustomerID IN (SELECT CustomerID FROM Orders WHERE OrderDate > '2021-01-01');
+```
+
+>*這個查詢選擇自 2021 年 1 月 1 日以後至少有一個訂單的所有客戶*
+
+#### 子查詢注意事項
+
+* 子查詢應該被括號包圍。  
+* 在某些情況下，子查詢可以被公用表達式（`CTE`）或 `JOIN` 替代。
+* 子查詢的返回結果通常應該是單列，特別是在用於 `WHERE` 時。
 
 ### CTE
 
 ### CONCATENATE
 
-### SQL SUBSTRING
+於將兩個或多個字符串字段或文字連接（合併）成一個字符串
+
+  **格式**
+
+```SQL
+  SELECT CONCAT(column1, column2, ...) FROM table_name;
+```
+
+**範例**
+
+1. **連接兩個文串**：
+
+   ```SQL
+   SELECT CONCAT(FirstName, ' ', LastName) AS FullName 
+   FROM Employees;
+   ```
+
+   將 `Employees` 表中的 `FirstName` 和 `LastName` 連接成一個完整的名稱，中間用空格分隔。
+
+2. **連接多個字串和文字**：
+
+   ```SQL
+   SELECT CONCAT(Address, ', ', City, ', ', Country) AS FullAddress 
+   FROM Customers;
+   ```
+
+   將 `Customers` 表中的 `Address`、`City` 和 `Country` 連接成一個完整的地址，每個元素之間用逗號和空格分隔。
+
+#### CONCATENATE注意事項
+
+* `CONCAT` 函數在不同的數據庫系統中可能存在一些變異，但基本功能是一致的。
+* 在某些數據庫系統中，您也可以直接使用 `||` 運算符來進行字符串的連接操作，例如：`column1 || column2`。
+* 如果任一連接的字串為 NULL，則該字串會被當作空字串處理。
+
+### SUBSTRING
+
+用於從字符串中擷取指定字串。
+
+**標準語法**
+
+```SQL
+SELECT SUBSTRING(column_name, start, length) 
+FROM table_name;
+```
+
+`column_name` 是要從中提取的字串，`start` 是起始位置（1 表示字串的第一個字），`length` 是要提取的數量。
+
+------
+
+**範例**
+
+1. **從指定位置提取固定長度的字串**：
+
+   ```SQL
+   SELECT SUBSTRING(FirstName, 1, 3) AS ShortName 
+   FROM Employees;
+   ```
+
+   從 `Employees` 表中每個員工的 `FirstName` 字段提取前三個字。
+
+2. **從中間位置提取字串**：
+
+   ```SQL
+   SELECT SUBSTRING(PhoneNumber, 5, 3) AS AreaCode 
+   FROM Customers;
+   ```
+
+   `Customers` 表中的 `PhoneNumber` 字串提取第 5 到第 7 個字作為條件。
+
+### 注意事項
+
+* 在不同的數據庫系統中，`SUBSTRING` 函數的語法可能略有差異。例如，某些系統中使用 `SUBSTR` 作為函數名。
+* 確保 `start` 和 `length` 參數在合法範圍內，以避免產生錯誤。
 
 ### TRIM
+
+用於從字符串的兩端移除指定的字串，最常見的用途是刪除字串開頭和結尾的空格。
+
+**格式**
+
+1. **刪除兩端空格**：
+
+   ```SQL
+   SELECT TRIM(column_name) FROM table_name;
+   ```
+
+   這將從 `column_name` 字串的開頭和結尾移除空格。
+
+2. **指定字符的刪除**：
+
+   ```SQL
+   SELECT TRIM(character FROM column_name) FROM table_name;
+   ```
+
+   這將從 `column_name` 字串的開頭和結尾移除指定的 `character`。
+
+------
+
+**範例**
+
+1. **移除字串兩端的空格**：
+
+   ```SQL
+   SELECT TRIM(FirstName) AS TrimmedName 
+   FROM Employees;
+   ```
+
+   移除 `Employees` 表中每個員工 `FirstName` 字串兩端的空格。
+
+2. **移除特定字**：
+
+   ```SQL
+   SELECT TRIM('.' FROM EmailAddress) AS CleanEmail FROM Customers;
+   ```
+
+   從 `Customers` 表中每個客戶的 `EmailAddress` 字串兩端移除點號（`.`）。
+
+3. **結合其他函數使用 `TRIM`**：
+
+   ```SQL
+   SELECT CONCAT(TRIM(FirstName), ' ', TRIM(LastName)) AS FullName FROM Employees;
+   ```
+
+   去除兩端空格的名字和姓氏連接而成的全名。
+
+#### TRIM注意事項
+
+* 在不同的數據庫系統中，`TRIM` 函數的行為和語法可能略有不同。
+* 某些系統還提供了 `LTRIM` 和 `RTRIM` 函數，專門用於刪除字串左側或右側的空格。
 
 ### LENGTH
 
