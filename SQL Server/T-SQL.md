@@ -25,6 +25,8 @@ T-SQL（Transact-SQL）是SQL（Structured Query Language）的一個擴展，�
 
 ## 查詢
 
+### IN
+
 ### SELECT
 
 `SELECT` 語句用於從資料庫中選擇數據。它允許指定要從哪個資料表中檢索哪些欄位，並可以通過添加條件來過濾結果。
