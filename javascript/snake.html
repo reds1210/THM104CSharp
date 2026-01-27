@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>經典貪食蛇 (ES5 Canvas)</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            margin: 0;
+            color: white;
+            font-family: monospace;
+        }
+        canvas {
+            border: 4px solid #555;
+            background-color: #000;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        #score {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        #msg {
+            color: #aaa;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="score">分數: 0</div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="msg">使用方向鍵控制 / F5 重來</div>
+
+    <script>
+        // --- 變數定義區 ---
+        var CANVAS_BORDER_COLOUR = 'white';
+        var CANVAS_BACKGROUND_COLOUR = "black";
+        var SNAKE_COLOUR = 'lightgreen';
+        var SNAKE_BORDER_COLOUR = 'darkgreen';
+        
+        var gameCanvas = document.getElementById("gameCanvas");
+        var ctx = gameCanvas.getContext("2d");
+        var scoreElement = document.getElementById("score");
+
+        // 遊戲設定
+        var blockSize = 20;
+        var score = 0;
+        var changingDirection = false; // 防止快速按鍵導致的自殺 bug
+
+        // 蛇的初始身體
+        var snake = [
+            {x: 200, y: 200},
+            {x: 180, y: 200},
+            {x: 160, y: 200},
+            {x: 140, y: 200},
+            {x: 120, y: 200}
+        ];
+
+        // 初始速度 (向右)
+        var dx = blockSize;
+        var dy = 0;
+
+        // 食物座標
+        var foodX;
+        var foodY;
+
+        // --- 程式進入點 ---
+        
+        // 先生產第一個食物
+        createFood();
+        // 開始主循環
+        main();
+        // 監聽鍵盤
+        document.addEventListener("keydown", changeDirection);
+
+
+        // --- 主要函式 ---
+
+        function main() {
+            if (didGameEnd()) {
+                alert("遊戲結束！您的分數是: " + score);
+                return;
+            }
+
+            changingDirection = false;
+            
+            setTimeout(function onTick() {
+                clearCanvas();
+                drawFood();
+                advanceSnake();
+                drawSnake();
+                
+                // 再次呼叫 main 形成循環
+                main();
+            }, 100);
+        }
+
+        // 畫背景
+        function clearCanvas() {
+            ctx.fillStyle = CANVAS_BACKGROUND_COLOUR;
+            ctx.strokestyle = CANVAS_BORDER_COLOUR;
+            ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+            ctx.strokeRect(0, 0, gameCanvas.width, gameCanvas.height);
+        }
+
+        // 畫蛇
+        function drawSnake() {
+            snake.forEach(function(part) {
+                drawSnakePart(part);
+            });
+        }
+
+        function drawSnakePart(snakePart) {
+            ctx.fillStyle = SNAKE_COLOUR;
+            ctx.strokestyle = SNAKE_BORDER_COLOUR;
+            ctx.fillRect(snakePart.x, snakePart.y, blockSize, blockSize);
+            ctx.strokeRect(snakePart.x, snakePart.y, blockSize, blockSize);
+        }
+
+        // 讓蛇移動 (核心邏輯)
+        function advanceSnake() {
+            var head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            
+            // 將新頭加入
+            snake.unshift(head);
+
+            // 判斷是否吃到食物
+            var didEatFood = snake[0].x === foodX && snake[0].y === foodY;
+            
+            if (didEatFood) {
+                score += 10;
+                scoreElement.innerHTML = "分數: " + score;
+                createFood();
+            } else {
+                // 沒吃到，移除尾巴
+                snake.pop();
+            }
+        }
+
+        // 鍵盤控制
+        function changeDirection(event) {
+            var LEFT_KEY = 37;
+            var RIGHT_KEY = 39;
+            var UP_KEY = 38;
+            var DOWN_KEY = 40;
+
+            // 如果這個 tick 已經轉過向了，就不要再轉 (防止快速雙擊導致回頭自殺)
+            if (changingDirection) return;
+            changingDirection = true;
+            
+            var keyPressed = event.keyCode;
+            var goingUp = dy === -blockSize;
+            var goingDown = dy === blockSize;
+            var goingRight = dx === blockSize;
+            var goingLeft = dx === -blockSize;
+
+            if (keyPressed === LEFT_KEY && !goingRight) {
+                dx = -blockSize;
+                dy = 0;
+            }
+            if (keyPressed === UP_KEY && !goingDown) {
+                dx = 0;
+                dy = -blockSize;
+            }
+            if (keyPressed === RIGHT_KEY && !goingLeft) {
+                dx = blockSize;
+                dy = 0;
+            }
+            if (keyPressed === DOWN_KEY && !goingUp) {
+                dx = 0;
+                dy = blockSize;
+            }
+        }
+
+        // 食物處理
+        function randomTen(min, max) {
+            return Math.round((Math.random() * (max-min) + min) / blockSize) * blockSize;
+        }
+
+        function createFood() {
+            foodX = randomTen(0, gameCanvas.width - blockSize);
+            foodY = randomTen(0, gameCanvas.height - blockSize);
+
+            // 確保食物不會生在蛇身上
+            snake.forEach(function isFoodOnSnake(part) {
+                var foodIsoNsnake = part.x == foodX && part.y == foodY;
+                if (foodIsoNsnake) createFood();
+            });
+        }
+
+        function drawFood() {
+            ctx.fillStyle = 'red';
+            ctx.strokestyle = 'darkred';
+            ctx.fillRect(foodX, foodY, blockSize, blockSize);
+            ctx.strokeRect(foodX, foodY, blockSize, blockSize);
+        }
+
+        // 碰撞檢測 (遊戲結束判定)
+        function didGameEnd() {
+            // 撞牆檢測
+            // 蛇頭座標
+            var head = snake[0];
+            
+            // 檢查有沒有撞自己 (從身體第二節開始檢查，因為頭肯定跟頭重疊)
+            for (var i = 4; i < snake.length; i++) {
+                if (snake[i].x === head.x && snake[i].y === head.y) return true;
+            }
+
+            var hitLeftWall = head.x < 0;
+            var hitRightWall = head.x > gameCanvas.width - blockSize;
+            var hitToptWall = head.y < 0;
+            var hitBottomWall = head.y > gameCanvas.height - blockSize;
+
+            return hitLeftWall || hitRightWall || hitToptWall || hitBottomWall;
+        }
+
+    </script>
+</body>
+</html>
