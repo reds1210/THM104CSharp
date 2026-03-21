@@ -1,76 +1,129 @@
 # 第 4 章：事件處理 (Events)
 
 ## 本章目標
-- 建立網頁互動的核心：讓網頁對使用者的操作做出反應。
-- 掌握滑鼠、表單與鍵盤常見事件。
-- 理解並解決「動態生成元素」無法綁定事件的問題（事件委派）。
-- 學習如何主動觸發事件。
-
-## 教學大綱
-- [x] 4.1 常見事件
-- [x] 4.2 標準綁定與解綁
-- [x] 4.3 事件委派 (Event Delegation) 【核心難點】
-- [x] 4.4 事件物件與控制 (The Event Object)
-- [ ] 4.5 主動觸發事件 (Trigger)
-- [ ] 4.6 實作練習
+- 掌握滑鼠與鍵盤的基礎事件監聽。
+- 理解 `.on()` 綁定與 `.off()` 解綁的時機。
+- **掌握事件委派 (Event Delegation) 解決動態元素失效問題（必考重點）**。
+- 學會使用事件物件 (`event`) 控制瀏覽器預設行為與冒泡。
+- 靈活運用 `trigger()` 主動觸發網頁交互。
 
 ---
 
-## 4.1 常見事件 (Common Events)
+## 4.1 基礎事件監聽 (Basic Events)
 
-事件是當使用者與網頁互動時，瀏覽器所發出的「訊號」。jQuery 讓我們能輕鬆監聽這些訊號並執行對應的函式 (Event Handler)。
+事件是使用者與網頁互動的瞬間（如點擊、打字）。jQuery 提供了直觀的方法來捕捉這些訊號。
 
-### 1. 滑鼠事件 (Mouse Events)
-這是最直觀的互動方式。
-
-| 事件名稱 | 觸發時機 |
-| :--- | :--- |
-| `click` | 當按鍵被「單擊」時。 |
-| `dblclick` | 當按鍵被「連點兩下」時。 |
-| `mouseenter` | 當滑鼠指標「進入」元素範圍時。 |
-| `mouseleave` | 當滑鼠指標「離開」元素範圍時。 |
+### 1. 滑鼠點擊與進入 (Mouse)
+這是最常用的互動，包含單擊、雙擊與滑鼠移入移出。
 
 **情境 HTML：**
 ```html
-<button id="btnClick">單擊測試</button>
-<button id="btnDbl">連點兩下測試</button>
-<div id="hoverBox" style="width:100px; height:100px; background:gray; color:white; padding:10px;">
-    Hover Me
-</div>
+<button id="btn">按鈕</button>
+<div id="box" style="width:100px; height:100px; background:gray;"></div>
 ```
 
 **範例操作：**
 ```javascript
-// A. 單擊
-$("#btnClick").click(function() {
+// A. 單擊 (Click)
+$("#btn").click(function() {
     $(this).text("已點擊");
 });
 
-// B. 雙擊
-$("#btnDbl").dblclick(function() {
-    $(this).css("background", "orange");
-});
-
-// C. 滑鼠進入與離開 (常用於製作按鈕變色效果)
-$("#hoverBox").mouseenter(function() {
-    $(this).css("background", "blue").text("進入範圍");
+// B. 移入與移出 (MouseEnter/Leave)
+$("#box").mouseenter(function() {
+    $(this).css("background", "red");
 }).mouseleave(function() {
-    $(this).css("background", "gray").text("Hover Me");
+    $(this).css("background", "gray");
 });
 ```
 
+**執行後結果：**
+- **點擊按鈕**：按鈕文字會變為「已點擊」。
+- **滑鼠移入方塊**：背景色變紅；移出則恢復灰色。
+
 ---
 
-## 4.2 標準綁定與解綁 (On, Off, One)
+### 2. 鍵盤與表單 (Keyboard & Form)
+用於處理輸入框的文字輸入與焦點狀態。
 
-雖然 4.1 教的 `.click()` 很方便，但在現代 jQuery 開發中，我們更推薦使用 **`.on()`**。
+**情境 HTML：**
+```html
+<input type="text" id="user" placeholder="請輸入姓名">
+```
 
-### 1. 為何推薦使用 `.on()`？
-- **語法統一**：無論是滑鼠、鍵盤還是自定義事件，通通用 `.on()`。
-- **支援多重事件**：可以一次綁定多個事件（使用物件語法）。
-- **動態元素支援 (關鍵優勢)**：
-    - 使用 `.click()` 綁定事件時，只能綁定在「目前已經存在」的元素。
-    - `.on()` 配合「事件委派」語法，可以處理未來產生的元素。
+**範例操作：**
+```javascript
+// A. 取得焦點 (Focus)
+$("#user").focus(function() {
+    $(this).css("border", "2px solid blue");
+});
+
+// B. 鍵盤壓下 (Keydown)
+$("#user").keydown(function(e) {
+    console.log("正在輸入，鍵盤代碼：" + e.which);
+});
+```
+
+**執行後結果：**
+- **點擊輸入框**：外框會變為藍色粗線。
+- **按下任意鍵**：控制台 (Console) 會印出對應的按鍵數字代碼。
+
+---
+
+### [隨堂小測驗 1]
+**任務：**
+1. 讓 `#imgLogo` 在雙擊 (`dblclick`) 時消失 (`hide`)：
+   ```javascript
+   $("#imgLogo").____(function() {
+       $(this).hide();
+   });
+   ```
+2. 當使用者離開 (`blur`) `#email` 輸入框時，跳出 `alert("離開輸入框")`：
+   ```javascript
+   $("#email").____(function() {
+       alert("離開輸入框");
+   });
+   ```
+
+<details>
+<summary>查看解答</summary>
+
+```javascript
+// 1. dblclick
+$("#imgLogo").dblclick(function() { $(this).hide(); });
+
+// 2. blur
+$("#email").blur(function() { alert("離開輸入框"); });
+```
+</details>
+
+---
+
+## 4.2 標準綁定與解綁 (On & Off)
+
+在現代 jQuery 開發中，我們推薦使用 `.on()` 來取代舊式的 `.click()`，因為它更具靈活性且語法統一。
+
+### 1. 多重綁定 (On)
+你可以用一個 `.on()` 同時處理多個事件，減少重複代碼。
+
+**範例操作：**
+```javascript
+// 使用物件語法一次綁定
+$("#btn").on({
+    "click": function() { console.log("點擊"); },
+    "mouseenter": function() { $(this).css("opacity", 0.5); },
+    "mouseleave": function() { $(this).css("opacity", 1); }
+});
+```
+
+### 2. 移除綁定 (Off)
+當某個功能在特定條件下（如：遊戲結束、表單已送出）不再需要反應時。
+
+**範例操作：**
+```javascript
+// 移除按鈕上所有的點擊事件
+$("#btn").off("click");
+```
 
 ---
 
@@ -78,130 +131,175 @@ $("#hoverBox").mouseenter(function() {
 
 這是 jQuery 中最重要、也是初學者最容易卡關的進階觀念。
 
-### 1. 為什麼需要委派？
-JavaScript 的事件綁定是在「程式執行那一刻」完成的。如果你後來才透過 `append()` 新增元素，這些新同學是沒被註冊到事件的。
+### 背景知識：為什麼需要委派？
+JavaScript 的事件綁定是在「程式執行那一刻」完成的。如果你後來才透過 `append()` 新增元素，這些「新同學」是不會帶有原本綁定的事件的。
 
-### 2. 解決方案
-我們不把事件直接綁在會變動的子元素上，而是綁在一個**「本來就存在、且不會消失」**的父元素上。
-
-**語法：** `$(靜態父元素).on("事件名稱", "動態子元素選擇器", function() { ... });`
+> **黃金法則：**
+> 只要是會「動態新增」的元素，事件必須綁在它的**靜態父元素**（原本就存在 HTML 裡的）身上。
 
 **情境 HTML：**
 ```html
 <button id="addBtn">新增項目</button>
-<ul id="taskList">
-    <li>原始項目</li>
+<ul id="list">
+    <li>原始項目 (點我會變紅)</li>
 </ul>
 ```
 
 **範例操作：**
 ```javascript
-// 將事件綁在 #taskList (老爸)，監控 li (小孩)
-$("#taskList").on("click", "li", function() {
-    $(this).css("color", "red"); 
+// 正確做法：委派給父層 #list，監控底下的 li
+$("#list").on("click", "li", function() {
+    $(this).css("color", "red");
 });
 
+// 點擊按鈕新增 li
 $("#addBtn").click(function() {
-    $("#taskList").append("<li>我是新來的，我也會變色！</li>");
+    $("#list").append("<li>我是新來的，我也會變紅！</li>");
 });
 ```
+
+**執行後結果：**
+- **原始項目**：點擊後文字變紅。
+- **新項目**：因為使用了「事件委派」，即便是在 `.on()` 執行後才產生的項目，點擊依然有效。
 
 ---
 
-## 4.4 事件物件與控制 (The Event Object)
-
-當事件被觸發時，jQuery 會自動傳遞一個「事件物件」給處理函式。這個物件（通常命名為 `e`）包含了所有關於該事件的詳細資訊。
-
-### 1. 取得滑鼠座標
-**情境 HTML：**
-```html
-<div id="coordBox" style="width:200px; height:100px; background:#eee; border:1px solid #ccc; text-align:center; line-height:100px;">
-    在此移動滑鼠
-</div>
-<p id="posInfo">座標：(0, 0)</p>
-```
-**範例操作：**
-```javascript
-$("#coordBox").mousemove(function(e) {
-    // e.pageX 和 e.pageY 是滑鼠在頁面上的座標
-    $("#posInfo").text("座標：(" + e.pageX + ", " + e.pageY + ")");
-});
-```
-
-### 2. 阻止預設行為 `e.preventDefault()`
-用來攔截 HTML 元素原本的行為（如：點擊連結跳轉、表單送出）。
-
-**情境 HTML：**
-```html
-<a href="https://google.com" id="preventLink">點我不會跳轉</a>
-```
-**範例操作：**
-```javascript
-$("#preventLink").click(function(e) {
-    e.preventDefault(); // 攔截跳轉
-    alert("跳轉已被阻止！");
-});
-```
-
-### 3. 阻止事件冒泡 `e.stopPropagation()`
-阻止點擊訊號繼續向父元素傳遞。
-
-**情境 HTML：**
-```html
-<div id="outer" style="padding:50px; background:gray;">
-    我是父層
-    <button id="inner">我是子層按鈕</button>
-</div>
-```
-**範例操作：**
-```javascript
-$("#outer").click(function() {
-    alert("點到了父層");
-});
-
-$("#inner").click(function(e) {
-    e.stopPropagation(); // 阻止訊號傳給父層
-    alert("點到了子層按鈕，訊號停止傳遞");
-});
-```
-
----
-
-### [隨堂小測驗 4]
-**準備工作：** 請複製以下 HTML。
-```html
-<div id="wrapper" style="padding:20px; background:lightblue;">
-    <a href="delete.php" class="delBtn">刪除資料</a>
-</div>
-```
+### [隨堂小測驗 2]
 **任務：**
-1. 為 `.delBtn` 綁定點擊事件。
-2. 執行 `e.preventDefault()` 確保不會跳轉到 `delete.php`。
-3. 執行 `e.stopPropagation()` 確保訊號不會傳到 `#wrapper`。
-4. 點擊後跳出 `confirm("確定刪除？")`。
+1. 修正以下代碼，讓動態新增的 `.del-btn` 也能觸發事件：
+   ```javascript
+   // 原本無效的寫法
+   // $(".del-btn").click(function() { $(this).parent().remove(); });
+
+   // 修正為委派寫法 (假設父層是 #container)
+   $("#container").____("click", "____", function() {
+       $(this).parent().remove();
+   });
+   ```
 
 <details>
 <summary>查看解答</summary>
 
 ```javascript
-$(".delBtn").on("click", function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (confirm("確定刪除？")) {
-        alert("執行中...");
-    }
+// 使用 on 進行委派
+$("#container").on("click", ".del-btn", function() {
+    $(this).parent().remove();
 });
 ```
 </details>
 
 ---
 
-## 4.5 主動觸發事件 (Trigger)
-- [ ] `trigger('click')`：模擬使用者點擊
-- [ ] 應用場景：頁面載入時自動執行搜尋、連動選單觸發
+## 4.4 事件物件與控制 (Event Object)
 
-## 4.6 實作練習
-- [ ] 練習 4：
-    1. 實作一個動態新增按鈕的功能。
-    2. 使用 **事件委派** 確保新生成的按鈕也能彈出 alert。
-    3. 實作 "點擊背景關閉視窗" 功能 (利用 `stopPropagation` 防止點擊視窗內容時也關閉)。
+當事件被觸發時，jQuery 會自動傳遞一個包含所有詳細資訊的「事件物件」給處理函式。
+
+### 1. 阻止預設行為 (preventDefault)
+用於攔截 HTML 元素原本的行為（如：點擊連結跳轉、表單送出）。
+
+**情境 HTML：**
+```html
+<a href="https://google.com" id="noGo">點我不會跳轉</a>
+```
+
+**範例操作：**
+```javascript
+$("#noGo").click(function(e) {
+    e.preventDefault(); // 攔截跳轉訊號
+    alert("跳轉已被攔截！");
+});
+```
+
+### 2. 阻止事件冒泡 (stopPropagation)
+防止點擊訊號繼續向父元素傳遞，造成誤觸發。
+
+**情境 HTML：**
+```html
+<div id="parent" style="padding:50px; background:gray;">
+    父層
+    <button id="child">子層按鈕</button>
+</div>
+```
+
+**範例操作：**
+```javascript
+$("#parent").click(function() { alert("點到父層"); });
+
+$("#child").click(function(e) {
+    e.stopPropagation(); // 停止訊號向上傳遞
+    alert("點到子層，父層不會反應");
+});
+```
+
+---
+
+## 4.5 主動觸發事件 (Trigger)
+
+有時候我們希望「程式主動執行」某個按鈕的功能，而不需要使用者真的去點。
+
+**範例操作：**
+```javascript
+// 假設有一個隱藏的檔案上傳按鈕
+$("#uploadBtn").click(function() {
+    console.log("開啟檔案視窗...");
+});
+
+// 當點擊另一個漂亮的圖片時，主動觸發 uploadBtn 的點擊
+$("#prettyPic").click(function() {
+    $("#uploadBtn").trigger("click");
+});
+```
+
+---
+
+## 4.6 綜合課後練習 (Exercise)
+
+**專案：標籤管理系統 (Tag Manager)**
+
+**任務目標：**
+1. 建立一個 `index.html`，並貼上以下結構：
+```html
+<input type="text" id="tagInput" placeholder="輸入文字按下 Enter...">
+<div id="tagBox" style="margin-top: 20px;">
+    <!-- 標籤顯示區 -->
+</div>
+<style>
+    .tag { display: inline-block; padding: 5px 15px; background: #007bff; color: white; border-radius: 20px; margin: 5px; cursor: pointer; }
+</style>
+```
+
+2. 撰寫 jQuery 程式碼完成以下功能：
+   - **功能 A**：在輸入框輸入文字並按下 **Enter** 鍵時 (提示：鍵盤代碼 `e.which` 為 13)，讀取文字。
+   - **功能 B**：如果是空的，不執行；如果有值，使用 `append` 將其包裝在 `<span class="tag">` 中新增到 `#tagBox`。
+   - **功能 C**：新增完畢後，清空輸入框的值。
+   - **功能 D**：點擊任何產生的標籤時，將該標籤刪除 (`remove`)。**注意：此功能必須使用事件委派**。
+
+---
+
+### 練習解答 (Solution)
+
+<details>
+<summary>查看解答程式碼</summary>
+
+```javascript
+$(function() {
+    // 1. 處理輸入與新增
+    $("#tagInput").keydown(function(e) {
+        if (e.which === 13) { // 判斷 Enter
+            var val = $(this).val().trim();
+            if (val !== "") {
+                // 新增標籤 HTML
+                $("#tagBox").append('<span class="tag">' + val + '</span>');
+                // 清空輸入框
+                $(this).val("");
+            }
+        }
+    });
+
+    // 2. 處理刪除 (事件委派)
+    $("#tagBox").on("click", ".tag", function() {
+        $(this).remove();
+    });
+});
+```
+</details>
